@@ -5,11 +5,11 @@
 <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Menu</h1>
+      <h1>Category</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="/">Home</a></li>
-          <li class="breadcrumb-item active">Menu</li>
+          <li class="breadcrumb-item active">Category</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -50,31 +50,25 @@
                         <th scope="col">Name</th>
                         <th scope="col">Description</th>
                         <th scope="col">Image</th>
-                        <th scope="col">Price</th>
-                        <th scope="col">Rating</th>
-                        <th scope="col">Review</th>
-                        <th scope="col">Category</th>
+                        
                         <th scope="col">Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {% for menu in allMenu %}
+                      {% for category in categories %}
                       <tr>
-                        <th scope="row"><a href="menu.id"></a></th>
-                        <td>{{menu.name}}</td>
-                        <td>{{menu.description}}</td>
-                        <td><img style="height:100px; width: 150px;" class="img-fluid img-responsive" src="{{menu.image.url}}"></td>
-                        <td>{{menu.price}}</td>
-                        <td>{{menu.rating}}</td>
-                        <td>{{menu.review}}</td>
-                        <td>{{menu.category.name}}</td>
+                        <th scope="row"><a href="#">{{category.id}}</a></th>
+                        <td>{{category.name}}</td>
+                        <td>{{category.description}}</td>
+                        <td><img style="height:100px; width: 150px;" class="img-fluid img-responsive" src="{{category.image.url}}"></td>
+                        
                         <td> <a class="btn btn-outline-primary" href=""><i class="bi bi-eye"></i></a>
                         
-                          <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#menu-{{menu.id}}">
+                          <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#category-{{category.id}}">
                             <i class="bi bi-trash"></i>
                             
                           </button>
-                          <div class="modal fade" id="menu-{{menu.id}}" tabindex="-1">
+                          <div class="modal fade" id="category-{{category.id}}" tabindex="-1">
                             <div class="modal-dialog modal-dialog-centered">
                               <div class="modal-content">
                                 <div class="modal-header">
@@ -82,7 +76,7 @@
                                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                 Are you sure you want to delete <b>{{menu.name}}</b> ?
+                                 Are you sure you want to delete <b>{{category.name}}</b> ?
                                 </div>
                                 <div class="modal-footer">
                                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -91,7 +85,7 @@
                               </div>
                             </div>
                           </div><!-- End Vertically centered Modal--></td>
-                          
+
                       </tr>
                       {% endfor %}
                     </tbody>
