@@ -7,7 +7,10 @@ def home(request):
     return HttpResponse("This is Homepage")
 #dashboard section
 def dashboard(request):
-    return render(request,'index.html')
+    order = Order.objects.all().count()
+    menu = Menu.objects.all().count()
+    category = Category.objects.all().count()
+    return render(request,'index.html', {'order':order, 'menu':menu, 'category':category})
 
 #menu section
 def menu(request):
@@ -38,12 +41,58 @@ def deleteMenu(request, pk):
     menu.delete()
     return redirect("/menu")
 
+def viewMenu(request, pk):
+    menu = Menu.objects.get(id=pk)
+    categories=Category.objects.all()
+    return render(request,'viewMenu.html', {'menu':menu, 'categories':categories})
+
+def editMenu(request,pk):
+    if request.method == "POST":
+        name = request.POST['name']
+        description = request.POST['description']
+        image = request.FILES.get('image')
+        price = request.POST['price']
+        rating = request.POST['rating']
+        review = request.POST['review']
+        category = request.POST['category']
+
+        menu = Menu.objects.get(id=pk)
+        if (image):
+            menu.name = name
+            menu.description = description
+            menu.image = image
+            menu.price = price
+            menu.rating = rating
+            menu.review = review
+            category_id = Category.objects.get(id=category)
+            menu.category = category_id
+            menu.save()
+            return redirect('viewMenu', pk=pk)
+        else:
+            menu.name = name
+            menu.description = description
+            menu.price = price
+            menu.rating = rating
+            menu.review = review
+            category_id = Category.objects.get(id=category)
+            menu.category = category_id
+            menu.save()
+            return redirect('viewMenu', pk=pk)
+    else:
+        menu = Menu.objects.get(id=pk)
+        return render(request,'viewMenu.html', {'menu':menu})
+
 #order section
 def order(request):
     orders=Order.objects.all().prefetch_related('orderitem_set__menu')
     for order in orders:
         order.total_price = sum(order_item.total_price() for order_item in order.orderitem_set.all())
     return render(request,'order.html',{'orders':orders})
+
+def deleteOrder(request, pk):
+    order = Order.objects.get(id=pk)
+    order.delete()
+    return redirect("/order")  
 
 #category section
 def category(request):
@@ -69,6 +118,32 @@ def deleteCategory(request, pk):
     #45/50
     category.delete()
     return redirect("/category")    
+
+def viewCategory(request, pk):
+    category = Category.objects.get(id=pk)
+    return render(request,'viewCategory.html', {'category':category})
+
+def editCategory(request,pk):
+    if request.method == "POST":
+        name = request.POST['name']
+        description = request.POST['description']
+        image = request.FILES.get('image')
+
+        category = Category.objects.get(id=pk)
+        if (image):
+            category.name = name
+            category.description = description
+            category.image = image
+            category.save()
+            return redirect('viewCategory', pk=pk)
+        else:
+            category.name = name
+            category.description = description
+            category.save()
+            return redirect('viewCategory', pk=pk)
+    else:
+        category = Category.objects.get(id=pk)
+        return render(request,'viewCategory.html', {'category':category})
 
 #auth section
 def login(request):

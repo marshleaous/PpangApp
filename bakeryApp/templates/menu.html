@@ -91,7 +91,7 @@
                 </div>
 
                 <div class="card-body">
-                  <h5 class="card-title">Recent Sales <span>| Today</span></h5>
+                  <h5 class="card-title">Menu <span>| Today</span></h5>
 
                   <table class="table table-borderless datatable">
                     <thead>
@@ -118,7 +118,7 @@
                         <td>{{menu.rating}}</td>
                         <td>{{menu.review}}</td>
                         <td>{{menu.category.name}}</td>
-                        <td> <a class="btn btn-outline-primary" href=""><i class="bi bi-eye"></i></a>
+                        <td> <a class="btn btn-outline-primary" href="view-menu/{{menu.id}}"><i class="bi bi-eye"></i></a>
                         
                           <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#menu-{{menu.id}}">
                             <i class="bi bi-trash"></i>
