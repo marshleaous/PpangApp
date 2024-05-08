@@ -6,6 +6,7 @@ class Category(models.Model):
     name = models.CharField(max_length=150)
     description = models.TextField()
     image = models.ImageField(upload_to='category_images')
+    created_at = models.DateTimeField(default=datetime.now())
 
     def __str__(self):
         return self.name
@@ -18,6 +19,7 @@ class Menu(models.Model):
     rating = models.DecimalField(max_digits=3,decimal_places=2,default= None, null=True)
     review = models.TextField(default= None, null=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=datetime.now())
 
     def __str__(self):
         return self.name
@@ -35,6 +37,7 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices = status_choice)
     menu=models.ManyToManyField(Menu, through ='OrderItem')
     created_at = models.DateTimeField(default=datetime.now())
+
     def __str__(self):
         return f"{self.name}'s Order"
 

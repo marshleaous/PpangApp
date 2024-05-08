@@ -82,7 +82,6 @@
                         <th scope="col">Name</th>
                         <th scope="col">Description</th>
                         <th scope="col">Image</th>
-                        
                         <th scope="col">Action</th>
                       </tr>
                     </thead>
@@ -92,13 +91,13 @@
                         <th scope="row"><a href="#">{{category.id}}</a></th>
                         <td>{{category.name}}</td>
                         <td>{{category.description}}</td>
-                        <td><img style="height:100px; width: 150px;" class="img-fluid img-responsive" src="{{category.image.url}}"></td>
-                        
-                        <td> <a class="btn btn-outline-primary" href="view-category/{{category.id}}"><i class="bi bi-eye"></i></a>
-                        
+                        <td><img style="height: 100px; width: 150px;" class="img-fluid img-responsive" src="{{category.image.url}}"></td>
+                        <td>
+                          <a class="btn btn-outline-primary" href="view-category/{{category.id}}"><i class="bi bi-eye-fill"></i></a>
+
+                          <!-- Vertically centered Modal -->
                           <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#category-{{category.id}}">
-                            <i class="bi bi-trash"></i>
-                            
+                            <i class="bi bi-trash-fill"></i>
                           </button>
                           <div class="modal fade" id="category-{{category.id}}" tabindex="-1">
                             <div class="modal-dialog modal-dialog-centered">
@@ -108,7 +107,7 @@
                                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                 Are you sure you want to delete <b>{{category.name}}</b> ?
+                                  Are you sure want to delete <b>{{category.name}}</b> ? 
                                 </div>
                                 <div class="modal-footer">
                                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -116,8 +115,8 @@
                                 </div>
                               </div>
                             </div>
-                          </div><!-- End Vertically centered Modal--></td>
-
+                          </div><!-- End Vertically centered Modal-->
+                        </td>
                       </tr>
                       {% endfor %}
                     </tbody>

@@ -2,15 +2,42 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import Menu,Category,Order
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from datetime import datetime, timedelta
+from django.db.models import Count
 
 def home(request):
     return HttpResponse("This is Homepage")
 #dashboard section
 def dashboard(request):
-    order = Order.objects.all().count()
-    menu = Menu.objects.all().count()
-    category = Category.objects.all().count()
-    return render(request,'index.html', {'order':order, 'menu':menu, 'category':category})
+    orderCount = Order.objects.all().count()
+    menuCount = Menu.objects.all().count()
+    allCategory = Category.objects.all().count()
+
+    #recent sales
+    allOrder=Order.objects.all().prefetch_related('orderitem_set__menu')
+    for order in allOrder:
+        order.total_price = sum(order_item.total_price() for order_item in order.orderitem_set.all())
+
+    end_date = datetime.now()
+    start_date = end_date-timedelta(days=6)
+
+     #top selling
+    top_selling_menu = Menu.objects.annotate(num_orders=Count('order')).order_by('-num_orders')
+    for menu in top_selling_menu:
+        menu.revenue = menu.order_set.count() * menu.price
+
+
+    #fetch data for each day
+    data = []
+    for i in range(7):
+        date = start_date + timedelta(days=i)
+        orders = Order.objects.filter(created_at__date=date).count()
+        menus = Menu.objects.filter(created_at__date=date).count()
+        categories = Category.objects.filter(created_at__date=date).count()
+        data.append({'date':date.strftime("%Y-%m-%d"),'orders':orders, 'menus':menus,'categories':categories})
+
+    return render(request,'index.html', {'orderCount':orderCount, 'menuCount':menuCount, 'allCategory':allCategory,'data':data,'allOrder':allOrder, 'top_selling_menu':top_selling_menu})
+
 
 #menu section
 def menu(request):
