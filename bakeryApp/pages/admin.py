@@ -11,7 +11,7 @@ admin.site.register(Category,CategoryAdmin)
 
 #menu model
 class MenuAdmin(admin.ModelAdmin):
-    list_display = ['name','description','image','price','rating','review','category']
+    list_display = ['name','description','image','price','category']
 
 admin.site.register(Menu,MenuAdmin)
 
@@ -29,6 +29,6 @@ admin.site.register(OrderItem,OrderItemAdmin)
 
 #customer model
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ['name','email','phone_number','password']
+    list_display = ['user','phone_number']
 
 admin.site.register(Customer,CustomerAdmin)

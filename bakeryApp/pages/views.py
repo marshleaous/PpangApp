@@ -1,9 +1,16 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from .models import Menu,Category,Order
+from django.http import HttpResponse, JsonResponse
+from .models import Menu,Category,Order,OrderItem, Customer, Review
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from datetime import datetime, timedelta
 from django.db.models import Count
+import json
+from django.views.decorators.csrf import csrf_exempt
+from django.db import models
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
+from django.db.utils import IntegrityError
 
 def home(request):
     return HttpResponse("This is Homepage")
@@ -132,13 +139,11 @@ def addCategory(request):
         description = request.POST['description']
         image = request.FILES.get('image')
 
-        category_id = Category.objects.get(id=category)
-
-        add_category = Category.objects.create(name=name, description=description, image=image, category=category_id)
+        add_category = Category.objects.create(name=name, description=description, image=image)
         add_category.save()
-        return redirect("/category")    
+        return redirect("/category")
     else:
-        return render(request,'category.html')
+        return render(request, 'category.html')
     
 def deleteCategory(request, pk):
     category = Category.objects.get(id=pk)
@@ -191,3 +196,194 @@ def login(request):
 def logout(request):
     auth_logout(request)
     return redirect("login")
+
+#API
+def get_all_categories(request):
+    categories = Category.objects.all().values('id','name','description','image')
+    response = JsonResponse(list(categories), safe=False)
+    response['Access-Control-Allow-Origin']= request.headers.get('Origin','*')
+    return response
+
+def get_all_menus(request):
+    menus = Menu.objects.all().values('id','name','description','image','price','category__id','category__name')
+    response = JsonResponse(list(menus), safe=False)
+    response['Access-Control-Allow-Origin']= request.headers.get('Origin','*')
+    return response
+
+def top_sellers(request):
+    top_sellers = OrderItem.objects.values('menu__name','menu__image').annotate(count=Count('id')).order_by('-count')[:5] #display top5
+    response = JsonResponse(list(top_sellers), safe=False)
+    response['Access-Control-Allow-Origin']= request.headers.get('Origin','*')
+    return response
+
+@csrf_exempt
+def create_order(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+
+            order = Order.objects.create(
+                order_id = data['order_id'],
+                name = data['name'],
+                phone_number = data['phone_number'],
+                status = data.get('status','pending')
+            )
+            for item in data['menu']:
+                menu_item = Menu.objects.get(id=item['id'])
+                OrderItem.objects.create(
+                    order = order,
+                    menu = menu_item,
+                    quantity = item['quantity']
+                )
+            return JsonResponse({'message' : 'Order created successfuly', 'order_id' : order.order_id}, status=201)
+        
+        except Exception as e:
+            return JsonResponse({'error' : str(e)}, status=400)
+        
+    return JsonResponse({'error' : 'Invalid request method'}, status=405)
+
+#API AUTH
+@csrf_exempt
+def api_login(request):
+    if request.method =="POST":
+        try:
+            data = json.loads(request.body)
+            print(data)
+            username = data.get('username')
+            password = data.get('password')
+
+            print(f"Login attempt with username: {username}, password: {password}")
+
+            user = authenticate(request, username=username,password=password)
+            
+            if user is not None:
+                auth_login(request,user)
+                return JsonResponse({'success': True, 'message': 'Login Successful'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Invalid credentials'}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Invalid JSON'}, status=400)
+        except KeyError:
+            return JsonResponse({'success': False, 'message': 'Invalid data'}, status=400)
+    else:
+        return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+    
+def api_logout(request):
+    logout(request)
+    return JsonResponse({'success': True, 'message': 'Logout Successful'})
+
+def api_current_user(request):
+    if request.user.is_authenticated:
+        current_user = {
+            'id' : request.user.id,
+            'username' : request.user.username,
+            'email' : request.user.email,
+        }
+        return JsonResponse(current_user)
+    else:
+        return JsonResponse({'message': 'User is not authenticated'}, status=401)
+    
+@login_required
+def api_login_stat(request):
+    user = request.user
+    try:
+        customer = user.customer  # Access the related Customer instance
+        phone_number = customer.phone_number
+    except Customer.DoesNotExist:
+        phone_number = None
+
+    return JsonResponse({
+        'is_logged_in': True,
+        'username': user.username,
+        'email': user.email,
+        'phoneNumber': phone_number
+    })
+
+@csrf_exempt
+def api_register(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            print("Request Payload Data:", data)
+            name = data['name']
+            email = data['email']
+            password = data['password']
+            phone_number = data.get('phoneNumber', '')  # Get phone number from request data
+
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({'error': 'Email already registered'}, status=400)
+            
+            # Create user
+            user = User.objects.create(
+                username=name,
+                email=email,
+                first_name=name,
+                password=make_password(password)
+            )
+
+            # Create customer with user association
+            customer = Customer.objects.create(
+                user=user,
+                phone_number=phone_number  # Insert phone number into Customer table
+            )
+
+            return JsonResponse({'success': 'User registered successfully'}, status=201)
+        except KeyError:
+            return JsonResponse({'error': 'Invalid data'}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@csrf_exempt
+def submit_review(request, menu_id):
+    if request.method == 'POST':
+        # Get data from request (rating and review)
+        data = json.loads(request.body)
+        rating = data.get('rating')
+        review_text = data.get('review_text')
+
+        print(rating, review_text)
+
+        # Validate data (you can add more validation if needed)
+        if not rating or not review_text:
+            return JsonResponse({'error': 'Rating or review text is missing'}, status=400)
+
+        try:
+            # Create the review object
+            review = Review.objects.create(
+                menu_id=menu_id,
+                customer=request.user.customer,  # Assuming user is authenticated and has a customer profile
+                rating=rating,
+                review_text=review_text
+            )
+
+            # Return a JSON response indicating success
+            return JsonResponse({'message': 'Review submitted successfully'})
+        except IntegrityError:
+            return JsonResponse({'error': 'Failed to submit review'}, status=400)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+def get_reviews_for_menu(request, menu_id):
+    try:
+        reviews = Review.objects.filter(menu_id=menu_id).values('id', 'customer__user__username', 'rating', 'review_text')
+        return JsonResponse(list(reviews), safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+def get_recommended_menus(request):
+    # Get the current user
+    current_user = request.user.customer
+
+    # Get menus reviewed by the current user
+    reviewed_menu_ids = Review.objects.filter(customer=current_user).values_list('menu_id', flat=True)
+
+    reviewed_categories = Menu.objects.filter(id__in=reviewed_menu_ids).values_list('category', flat=True)
+
+    # Exclude reviewed menus and get recommended menus
+    recommended_menus = Menu.objects.filter(category__in=reviewed_categories).distinct()
+
+    # Serialize the recommended menus data
+    recommended_menus_data = list(recommended_menus.values())
+
+    return JsonResponse(recommended_menus_data, safe=False)
