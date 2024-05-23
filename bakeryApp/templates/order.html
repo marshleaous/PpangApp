@@ -73,13 +73,98 @@
 
                           <td>{{order.created_at}}</td>
                           <td>RM{{ order.total_price }}</td>
-                          <td> <a class="btn btn-outline-primary" href=""><i class="bi bi-eye"></i></a>
-                        
-                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#menu-{{menu.id}}">
+                          <td> 
+                          {% if order.status != 'completed' %}
+                          <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#order-{{order.id}}">
+                            <i class="bi bi-eye"></i>
+                            
+                          </button>
+                          <div class="modal fade" id="order-{{order.id}}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                  <h5 class="modal-title">View</h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                  <form method="POST" action="/order/edit-order/{{order.id}}">
+                                    {% csrf_token %}
+                                    <div class="row mb-3">
+                                      <label for="inputEmail3" class="col-sm-2 col-form-label">Order ID</label>
+                                      <div class="col-sm-10">
+                                        <input name="name" type="text" class="form-control" value="{{order.order_id}}" disabled>
+                                      </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                      <label for="inputEmail3" class="col-sm-2 col-form-label">Name</label>
+                                      <div class="col-sm-10">
+                                        <input name="name" type="text" class="form-control" value="{{order.name}}" disabled>
+                                      </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                      <label for="inputEmail3" class="col-sm-2 col-form-label">Phone Number</label>
+                                      <div class="col-sm-10">
+                                        <input name="name" type="text" class="form-control" value="{{order.phone_number}}" disabled>
+                                      </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                      <label for="inputEmail3" class="col-sm-2 col-form-label">Email</label>
+                                      <div class="col-sm-10">
+                                        <input name="name" type="text" class="form-control" value="{{order.email}}" disabled>
+                                      </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                      <label for="inputEmail3" class="col-sm-2 col-form-label">Order Item</label>
+                                      <div class="col-sm-10">
+                                        <ul>
+                                          {% for order_item in order.orderitem_set.all %}
+                                          <li>
+                                            {{ order_item.quantity}} x {{order_item.menu.name}}
+                                            RM{{ order_item.total_price}}
+                                          </li>
+                                          {% endfor %}
+                                        </ul>
+                                      </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                      <label for="inputEmail3" class="col-sm-2 col-form-label">Created At</label>
+                                      <div class="col-sm-10">
+                                        <input name="name" type="text" class="form-control" value="{{order.created_at}}" disabled>
+                                      </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                      <label for="inputEmail3" class="col-sm-2 col-form-label">Total Price</label>
+                                      <div class="col-sm-10">
+                                        <input name="name" type="text" class="form-control" value="{{order.total_price}}" disabled>
+                                      </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                      <label class="col-sm-2 col-form-label">Select</label>
+                                      <div class="col-sm-10">
+                                        <select class="form-select" name="status" aria-label="Default select example">
+                                          <option selected>Select Status</option>
+                                          <option value="pending">pending</option>
+                                          <option value="completed">completed</option>
+                                          <option value="cancelled">cancelled</option>
+                                        </select>
+                                      </div>
+                                    </div>
+                                    <div class="text-center">
+                                      <button type="submit" class="btn btn-primary">Submit</button>
+                                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                  </form>
+                                </div>  
+                                
+                              </div>
+                            </div>
+                          </div>
+                         {% endif %}
+                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#order-{{order.id}}">
                               <i class="bi bi-trash"></i>
                               
                             </button>
-                            <div class="modal fade" id="menu-{{menu.id}}" tabindex="-1">
+                            <div class="modal fade" id="order-{{order.id}}" tabindex="-1">
                               <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content">
                                   <div class="modal-header">

@@ -21,7 +21,7 @@ def dashboard(request):
     allCategory = Category.objects.all().count()
 
     #recent sales
-    allOrder=Order.objects.all().prefetch_related('orderitem_set__menu')
+    allOrder=Order.objects.all().prefetch_related('orderitem_set__menu').order_by('-created_at')
     for order in allOrder:
         order.total_price = sum(order_item.total_price() for order_item in order.orderitem_set.all())
 
@@ -118,7 +118,7 @@ def editMenu(request,pk):
 
 #order section
 def order(request):
-    orders=Order.objects.all().prefetch_related('orderitem_set__menu')
+    orders=Order.objects.all().prefetch_related('orderitem_set__menu').order_by('-created_at')
     for order in orders:
         order.total_price = sum(order_item.total_price() for order_item in order.orderitem_set.all())
     return render(request,'order.html',{'orders':orders})
@@ -127,6 +127,18 @@ def deleteOrder(request, pk):
     order = Order.objects.get(id=pk)
     order.delete()
     return redirect("/order")  
+
+def editOrder(request, pk):
+    if request.method == "POST":
+        status = request.POST['status']
+
+        order = Order.objects.get(id=pk)
+        order.status = status
+        order.save()
+        return redirect("/order")
+    else:
+        return render(request, 'order.html')
+
 
 #category section
 def category(request):
