@@ -29,6 +29,7 @@ urlpatterns = [
     path('menu/<int:menu_id>/submit-review/', views.submit_review),
     path('menu/<int:menu_id>/reviews/', views.get_reviews_for_menu, name='get_reviews_for_menu'),
     path('api/recommended/', views.get_recommended_menus),
+    path('api/past-orders', views.past_orders),
 
 
     #auth

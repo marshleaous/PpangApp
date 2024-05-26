@@ -66,3 +66,13 @@ class Customer(models.Model):
     
     def __str__(self):
         return self.user.username
+
+
+class Notification(models.Model):
+    message = models.CharField(max_length=255)
+    order_id = models.CharField(max_length=200, null=True)
+    created_at = models.DateTimeField(default=datetime.now)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.message

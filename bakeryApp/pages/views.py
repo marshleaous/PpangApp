@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
-from .models import Menu,Category,Order,OrderItem, Customer, Review
+from .models import Menu,Category,Order,OrderItem, Customer, Review, Notification
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from datetime import datetime, timedelta
 from django.db.models import Count
@@ -77,8 +77,9 @@ def deleteMenu(request, pk):
 
 def viewMenu(request, pk):
     menu = Menu.objects.get(id=pk)
-    categories=Category.objects.all()
-    return render(request,'viewMenu.html', {'menu':menu, 'categories':categories})
+    categories = Category.objects.all()
+    reviews = Review.objects.filter(menu=menu).order_by('-created_at')
+    return render(request,'viewMenu.html', {'menu':menu, 'categories':categories, 'reviews': reviews})
 
 def editMenu(request,pk):
     if request.method == "POST":
@@ -135,6 +136,10 @@ def editOrder(request, pk):
         order = Order.objects.get(id=pk)
         order.status = status
         order.save()
+
+        notification = Notification.objects.get(order_id=order.order_id)
+        notification.delete()
+        
         return redirect("/order")
     else:
         return render(request, 'order.html')
@@ -247,6 +252,12 @@ def create_order(request):
                     menu = menu_item,
                     quantity = item['quantity']
                 )
+
+            # Create a notification
+            message = f"New order: {order.order_id} - {order.name}, {order.phone_number}"
+            orderID = order.order_id
+            Notification.objects.create(message=message, order_id=orderID)
+
             return JsonResponse({'message' : 'Order created successfuly', 'order_id' : order.order_id}, status=201)
         
         except Exception as e:
@@ -399,3 +410,32 @@ def get_recommended_menus(request):
     recommended_menus_data = list(recommended_menus.values())
 
     return JsonResponse(recommended_menus_data, safe=False)
+
+
+def past_orders(request):
+    user = request.user
+    orders = Order.objects.filter(name=user.username).order_by('-created_at')
+    orders_data = []
+
+    for order in orders:
+        order_items = OrderItem.objects.filter(order=order)
+        items_data = []
+        for item in order_items:
+            items_data.append({
+                'menu_name': item.menu.name,
+                'quantity': item.quantity,
+                'price': item.menu.price,
+                'total_price': item.total_price(),
+            })
+        order_info = {
+            'order_id': order.order_id,
+            'name': order.name,
+            'phone_number': order.phone_number,
+            'email': order.email,
+            'status': order.status,
+            'created_at': order.created_at,
+            'items': items_data,
+        }
+        orders_data.append(order_info)
+
+    return JsonResponse(orders_data, safe=False)
